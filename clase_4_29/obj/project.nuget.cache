@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "HynfCyFRwk4=",
+  "success": true,
+  "projectFilePath": "/Users/leov/fsharp/is3/is105_26_2_3/clase_4_29/clase_4_29.fsproj",
+  "expectedPackageFiles": [
+    "/Users/leov/.nuget/packages/fsharp.core/10.0.100/fsharp.core.10.0.100.nupkg.sha512"
+  ],
+  "logs": []
+}
