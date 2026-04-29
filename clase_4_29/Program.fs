@@ -1,2 +1,17 @@
-﻿// For more information see https://aka.ms/fsharp-console-apps
-printfn "Hello from F#"
+﻿//
+// Github.com
+//
+// Es el repositorio de todos los proyectos de software
+// del mundo.
+//
+// Es una forma de tener repositorios de Git.
+// el creador es Linus Torlvards.
+// Se llama Source Code Version Control
+//
+
+open App
+
+Menu.mostrar()
+
+
+
