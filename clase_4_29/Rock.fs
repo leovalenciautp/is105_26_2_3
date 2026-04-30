@@ -8,12 +8,19 @@ type RockState =
 | Falling
 | Terminated
 
+type SpriteState =
+| Moving
+| Resting
+
 type State = {
     RockState: RockState
+    SpriteState: SpriteState
     X: int
     Y: int
     RedrawScreen: bool
     Tick: int
+    StartTime: int
+    G: float
 }
 
 let initialState = {
@@ -22,22 +29,33 @@ let initialState = {
     Y = 0
     RedrawScreen = true
     Tick = -1
+    SpriteState = Moving
+    StartTime = 0
+    G = 9.8 // Gravedad de la tierra
 }
 
 let updateTick state =
     {state with Tick = state.Tick+1}
 
+//
+// Usando ecuacion de caida libre de Newton.
+//
 let updateRock state =
-    let newState =
-        if state.Tick <> 0 && state.Tick % 4 = 0 then
-            {state with Y= min (Console.BufferHeight-1) (state.Y+1)}
-        else
-            state 
-    if newState <> state then
-        {newState with RedrawScreen = true}
-    else
-        state
 
+    match state.SpriteState with
+    | Resting -> state
+    | Moving ->
+        if state.Y = Console.BufferHeight-1 then
+            {state with SpriteState = Resting}
+        else
+            let t = float (state.Tick-state.StartTime)*0.025
+            let y = state.G/2.0*t**2.0
+            let pixelY = min (Console.BufferHeight-1) (int (y*300.0/float Console.BufferHeight))
+            
+            if pixelY <> state.Y then 
+                {state with Y=pixelY;RedrawScreen=true}
+            else
+                state
 
 let redrawScreen state =
     if state.RedrawScreen then 
@@ -51,7 +69,7 @@ let updateRockKeyboard key state =
     let newState =
         match key with 
         | ConsoleKey.Enter ->
-            {state with Y=0}
+            {state with StartTime=state.Tick;SpriteState = Moving;Y=0}
         | ConsoleKey.Escape ->
             {state with RockState = Terminated}
         | _ -> state
