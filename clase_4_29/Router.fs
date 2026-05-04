@@ -10,6 +10,7 @@ type RouterState =
 | ShowingMenu
 | ShowingRock
 | ShowingMonster
+| ShowingSaludo
 | Terminated
 
 let initialState = ShowingMenu
@@ -20,12 +21,16 @@ let rec mainLoop state =
         match Menu.mostrar() with 
         | NewRockSim -> ShowingRock
         | NewMonsterSim -> ShowingMonster
+        | NewSaludo -> ShowingSaludo
         | Exit -> Terminated
     | ShowingRock -> 
         Rock.mostrar()
         ShowingMenu
     | ShowingMonster ->
         Monster.mostrar()
+        ShowingMenu
+    | ShowingSaludo ->
+        Saludo.mostrar()
         ShowingMenu
     | Terminated ->
         Terminated

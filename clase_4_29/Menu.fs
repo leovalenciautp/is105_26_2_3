@@ -34,6 +34,7 @@ let initialState = {
     Commands = [|
         NewRockSim,"Simulacion de Roca"
         NewMonsterSim, "Simulacion de Monstruo"
+        NewSaludo,"Modulo de Saludo"
         Exit,"Salir"
     |]
     RedrawScreen = true
