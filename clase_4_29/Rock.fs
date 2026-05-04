@@ -26,7 +26,7 @@ let initialState = {
     RedrawScreen = true
     Tick = -1
     StartTime = 0
-    G = 9.8 // Gravedad de la tierra
+    G = 9.77 // Gravedad de la tierra
 }
 
 let updateTick state =
@@ -51,7 +51,7 @@ let updateRock state =
 let redrawScreen state =
     if state.RedrawScreen then 
         Console.Clear()
-        displayMessage state.X state.Y ConsoleColor.Red "@"
+        displayMessage state.X state.Y ConsoleColor.Red "🪨"
         {state with RedrawScreen = false}
     else
         state

@@ -8,15 +8,12 @@ open System.Threading
 // del module App.Utils
 //
 open App.Utils
+open App.Types
 
 type MenuState =
 | Active
 | Terminated
 
-type Command =
-| NewRockSim
-| NewMonsterSim
-| Exit
 
 type State = {
     MenuState: MenuState
@@ -85,14 +82,18 @@ let rec mainLoop state =
     if newState.MenuState = Active then
         Thread.Sleep 25
         mainLoop newState
+    else
+        state
 
 let mostrar() =
     let oldForeground = Console.ForegroundColor
     Console.CursorVisible <- false
 
-    initialState
-    |> mainLoop
+    let state =
+        initialState
+        |> mainLoop
 
     Console.CursorVisible <- true
     Console.ForegroundColor <- oldForeground
     Console.Clear()
+    fst state.Commands[state.CurSorSelection]

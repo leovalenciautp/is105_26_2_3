@@ -8,6 +8,8 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Menu.fs" />
     <Compile Include="Rock.fs" />
+    <Compile Include="Monster.fs" />
+    <Compile Include="Router.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
