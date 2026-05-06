@@ -10,33 +10,22 @@ type ProgramState =
 | Terminated
 
 
-type KeyboardHelper =
-| Inactive
-| Active
-| WithData
+type EntryState =
+| AskingForData
+| ShowingData
 
-type KeyboardState = {
-    KeyboardHelper: KeyboardHelper
-    data: string
-    x: int
-    y: int
-    CursorX: int
-}
 
-let initialKeyboard = {
-    KeyboardHelper = Inactive
-    data = ""
-    x = 0
-    y = 0
-    CursorX = 0
-}
 
 type State = {
     ProgramState: ProgramState
     Tick: int
     Clock: int
     RedrawScreen: bool
-    KeyboardState: KeyboardState
+    EntryState: EntryState
+    EntryX: int
+    EntryY: int
+    EntryData: string
+    EntryLabel: string
 }
 
 let initialState = {
@@ -44,7 +33,11 @@ let initialState = {
     Tick = -1
     Clock = 0
     RedrawScreen = true
-    KeyboardState = initialKeyboard
+    EntryState = AskingForData
+    EntryX = 0
+    EntryY = 15
+    EntryData = ""
+    EntryLabel = "Entra tu nombre: "
 }
 
 let updateTick state =
@@ -61,11 +54,52 @@ let updateSaludoKeyboard key state =
     | ConsoleKey.Escape -> {state with ProgramState=Terminated}
     | _ -> state
 
+let updateEntryKeboard (key:ConsoleKeyInfo) state =
+    match key.KeyChar with 
+    | 'a'
+    | 'b'
+    | 'c'
+    | 'd'
+    | 'e'
+    | 'f'
+    | 'g'
+    | 'h'
+    | 'i'
+    | 'j'
+    | 'k'
+    | 'l'
+    | 'm'
+    | 'n'
+    | 'o'
+    | 'p'
+    | 'q'
+    | 'r'
+    | 's'
+    | 't'
+    | 'u'
+    | 'v'
+    | 'x'
+    | 'y'
+    | 'z'
+    | ' ' ->
+        {state with EntryData = state.EntryData+key.KeyChar.ToString(); RedrawScreen=true}
+    | _ -> state
+    |> fun s ->
+        match key.Key with 
+        | ConsoleKey.Backspace ->
+            {s with EntryData = state.EntryData.Remove(state.EntryData.Length-1,1); RedrawScreen = true}
+        | ConsoleKey.Enter ->
+            { s with EntryState = ShowingData;RedrawScreen=true}
+        | _ -> s
+
+
+
 let processKeyboard state =
     if Console.KeyAvailable then 
         let k = Console.ReadKey true
         state
         |> updateSaludoKeyboard k.Key
+        |> updateEntryKeboard k
     else
         state
 
@@ -73,22 +107,23 @@ let redrawClock state =
     displayMessageRight 0 ConsoleColor.Yellow $"{state.Clock}"
     state
 
-let redrawMensaje (state:State) =
-    displayMessage 0 15 ConsoleColor.Cyan "Entra tu nombre: "
-    let helper = {
-        KeyboardHelper = Active
-        data = ""
-        x = 18
-        y = 15
-        CursorX = 18
-    }
-    {state with KeyboardState = helper}
+
+let redrawEntry state =
+    match state.EntryState with 
+    | AskingForData ->
+        displayMessage state.EntryX state.EntryY ConsoleColor.Red state.EntryLabel
+        displayMessage (state.EntryX+state.EntryLabel.Length) state.EntryY ConsoleColor.Blue state.EntryData
+        displayMessage (state.EntryX+state.EntryLabel.Length+state.EntryData.Length) state.EntryY ConsoleColor.Red "☠️"
+    | ShowingData ->
+        displayMessage state.EntryX state.EntryY ConsoleColor.Red $"Hola {state.EntryData}"
+    state
+
 let redrawScreen state =
     if state.RedrawScreen then 
         Console.Clear()
         state
         |> redrawClock
-        |> redrawMensaje
+        |> redrawEntry
         |> fun s ->        
         {s with RedrawScreen = false}
     else
