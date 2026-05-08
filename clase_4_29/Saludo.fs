@@ -55,42 +55,22 @@ let updateSaludoKeyboard key state =
     | _ -> state
 
 let updateEntryKeboard (key:ConsoleKeyInfo) state =
-    match key.KeyChar with 
-    | 'a'
-    | 'b'
-    | 'c'
-    | 'd'
-    | 'e'
-    | 'f'
-    | 'g'
-    | 'h'
-    | 'i'
-    | 'j'
-    | 'k'
-    | 'l'
-    | 'm'
-    | 'n'
-    | 'o'
-    | 'p'
-    | 'q'
-    | 'r'
-    | 's'
-    | 't'
-    | 'u'
-    | 'v'
-    | 'x'
-    | 'y'
-    | 'z'
-    | ' ' ->
-        {state with EntryData = state.EntryData+key.KeyChar.ToString(); RedrawScreen=true}
-    | _ -> state
-    |> fun s ->
-        match key.Key with 
-        | ConsoleKey.Backspace ->
-            {s with EntryData = state.EntryData.Remove(state.EntryData.Length-1,1); RedrawScreen = true}
-        | ConsoleKey.Enter ->
-            { s with EntryState = ShowingData;RedrawScreen=true}
-        | _ -> s
+    if state.EntryState = AskingForData then 
+        match key with
+        | k when Char.IsLetter k.KeyChar ->
+            {state with EntryData = state.EntryData+key.KeyChar.ToString(); RedrawScreen=true}
+        | k ->
+            match k.Key with 
+
+            | ConsoleKey.Spacebar ->
+                {state with EntryData = state.EntryData+key.KeyChar.ToString(); RedrawScreen=true}
+            | ConsoleKey.Backspace ->
+                {state with EntryData = state.EntryData.Remove(state.EntryData.Length-1,1); RedrawScreen = true}
+            | ConsoleKey.Enter ->
+                { state with EntryState = ShowingData;RedrawScreen=true}
+            | _ -> state
+    else
+        state
 
 
 
@@ -115,7 +95,7 @@ let redrawEntry state =
         displayMessage (state.EntryX+state.EntryLabel.Length) state.EntryY ConsoleColor.Blue state.EntryData
         displayMessage (state.EntryX+state.EntryLabel.Length+state.EntryData.Length) state.EntryY ConsoleColor.Red "☠️"
     | ShowingData ->
-        displayMessage state.EntryX state.EntryY ConsoleColor.Red $"Hola {state.EntryData}"
+        displayMessage state.EntryX state.EntryY ConsoleColor.Cyan $"Hola {state.EntryData}"
     state
 
 let redrawScreen state =
@@ -140,12 +120,22 @@ let rec mainLoop state =
         Thread.Sleep 25
         mainLoop newState
 
+
+let pipeline = [|
+    updateTick
+    updateClock
+    processKeyboard
+    redrawScreen
+|]
+let miLoop = createMainLoop pipeline (fun s -> s.ProgramState <> Terminated)
+
 let mostrar() =
     Console.Clear()
     Console.CursorVisible <- false
 
     initialState 
-    |> mainLoop
+    |> miLoop
+    |> ignore
 
     Console.CursorVisible <- true
     Console.Clear()
