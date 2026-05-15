@@ -61,6 +61,14 @@ let calcular() =
         displayMessage 0 12 ConsoleColor.Red $"Resultado: {r}"
     }
 
+
+let calcular2() =
+    async {
+        let! r1 = [f 2; g 3] |> Async.Parallel
+        let r = r1 |> Array.sum
+        displayMessage 0 12 ConsoleColor.Red $"Resultado: {r}"
+    }
+
 //
 // Async.Start fuerza a la funcion a usar el Thread Pool
 //
