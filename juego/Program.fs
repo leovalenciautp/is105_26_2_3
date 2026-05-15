@@ -10,6 +10,10 @@ type ProgramState =
 | Running
 | Terminated
 
+type SpriteState =
+| Alive
+| Hit
+
 type Misil = {
     X: int
     Y: int
@@ -19,12 +23,14 @@ type State = {
     ProgramState: ProgramState
     AlienX: int
     AlienY: int
+    AlienState: SpriteState
     RedibujarPantalla: bool
     Tick: int
     Misiles: Misil list
     EnemigoX: int
     EnemigoY: int
     EnemigoDir: int
+    EnemigoEstado: SpriteState
     MisilesEnemigos: Misil list
 }
 
@@ -32,17 +38,24 @@ let estadoInicial = {
     ProgramState = Running
     AlienX = Console.BufferWidth/2
     AlienY = Console.BufferHeight/2
+    AlienState = Alive
     RedibujarPantalla = true
     Tick = -1
     Misiles = []
     EnemigoX = Console.BufferWidth-2
     EnemigoY = 0
     EnemigoDir = 1
+    EnemigoEstado = Alive
     MisilesEnemigos = []
 }
 
 let dibujarAlien state =
-    mostrarMensaje state.AlienX state.AlienY ConsoleColor.Yellow "👽"
+    let sprite =
+        if state.AlienState = Alive then 
+            "👽"
+        else
+            "💥"
+    mostrarMensaje state.AlienX state.AlienY ConsoleColor.Yellow sprite
 
 let dibujarEnemigo state =
     mostrarMensaje state.EnemigoX state.EnemigoY ConsoleColor.Yellow "👾"
@@ -119,33 +132,45 @@ let actualizarEnemigo state =
         state
 
 
+let detectarColisionConAlien state =
+    state.MisilesEnemigos
+    |> List.filter (fun misil -> not (misil.X = state.AlienX+1 && misil.Y = state.AlienY))
+    |> fun nuevosMisiles ->
+        if nuevosMisiles.Length <> state.MisilesEnemigos.Length then 
+            {state with AlienState=Hit; MisilesEnemigos=nuevosMisiles;RedibujarPantalla=true}
+        else
+            state
+
 let procesarTecladoApp key state =
     match key with 
     | ConsoleKey.Escape ->
         {state with ProgramState = Terminated}
     | _ -> state
 let procesarTecladoAlien key state =
-    match key with 
-    | ConsoleKey.Spacebar ->
-        let nuevoMisil = {
-            X = state.AlienX+2
-            Y = state.AlienY
-        }
-        {state with Misiles = nuevoMisil :: state.Misiles}
-    | ConsoleKey.UpArrow ->
-        {state with AlienY = max 0 (state.AlienY-1)}
-    | ConsoleKey.DownArrow ->
-        {state with AlienY = min (Console.BufferHeight-1) (state.AlienY+1)}
-    | ConsoleKey.LeftArrow ->
-        {state with AlienX = max 0 (state.AlienX-1)}
-    | ConsoleKey.RightArrow ->
-        {state with AlienX = min (Console.BufferWidth-2) (state.AlienX+1)}
-    | _ -> state
-    |> fun nuevoEstado ->
-        if nuevoEstado <> state then 
-            {nuevoEstado with RedibujarPantalla=true}
-        else
-            state
+    if state.AlienState = Alive then 
+        match key with 
+        | ConsoleKey.Spacebar ->
+            let nuevoMisil = {
+                X = state.AlienX+2
+                Y = state.AlienY
+            }
+            {state with Misiles = nuevoMisil :: state.Misiles}
+        | ConsoleKey.UpArrow ->
+            {state with AlienY = max 0 (state.AlienY-1)}
+        | ConsoleKey.DownArrow ->
+            {state with AlienY = min (Console.BufferHeight-1) (state.AlienY+1)}
+        | ConsoleKey.LeftArrow ->
+            {state with AlienX = max 0 (state.AlienX-1)}
+        | ConsoleKey.RightArrow ->
+            {state with AlienX = min (Console.BufferWidth-2) (state.AlienX+1)}
+        | _ -> state
+        |> fun nuevoEstado ->
+            if nuevoEstado <> state then 
+                {nuevoEstado with RedibujarPantalla=true}
+            else
+                state
+    else
+        state
 
 let procesarTeclado state =
     if Console.KeyAvailable then 
@@ -163,6 +188,7 @@ let rec mainLoop state =
     |> actualizarEnemigo
     |> actualizarDisparoEnemigo
     |> actualizarMisilesEnemigos
+    |> detectarColisionConAlien
     |> procesarTeclado
     |> redibujarPantalla
     |> fun nuevoEstado ->
