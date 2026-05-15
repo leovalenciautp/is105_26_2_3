@@ -32,6 +32,7 @@ type State = {
     EnemigoDir: int
     EnemigoEstado: SpriteState
     MisilesEnemigos: Misil list
+    ColisionAlien: int
 }
 
 let estadoInicial = {
@@ -47,6 +48,7 @@ let estadoInicial = {
     EnemigoDir = 1
     EnemigoEstado = Alive
     MisilesEnemigos = []
+    ColisionAlien = 0
 }
 
 let dibujarAlien state =
@@ -137,10 +139,24 @@ let detectarColisionConAlien state =
     |> List.filter (fun misil -> not (misil.X = state.AlienX+1 && misil.Y = state.AlienY))
     |> fun nuevosMisiles ->
         if nuevosMisiles.Length <> state.MisilesEnemigos.Length then 
-            {state with AlienState=Hit; MisilesEnemigos=nuevosMisiles;RedibujarPantalla=true}
+            {state with 
+                AlienState=Hit
+                MisilesEnemigos=nuevosMisiles
+                RedibujarPantalla=true
+                ColisionAlien=state.Tick
+            }
         else
             state
 
+let resetAlien state =
+    if state.AlienState = Hit then 
+        let tiempo = state.Tick-state.ColisionAlien
+        if tiempo >= 160 then 
+            {state with AlienState=Alive;RedibujarPantalla=true}
+        else
+            state
+    else
+        state
 let procesarTecladoApp key state =
     match key with 
     | ConsoleKey.Escape ->
@@ -189,6 +205,7 @@ let rec mainLoop state =
     |> actualizarDisparoEnemigo
     |> actualizarMisilesEnemigos
     |> detectarColisionConAlien
+    |> resetAlien
     |> procesarTeclado
     |> redibujarPantalla
     |> fun nuevoEstado ->
