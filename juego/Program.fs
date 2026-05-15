@@ -33,6 +33,7 @@ type State = {
     EnemigoEstado: SpriteState
     MisilesEnemigos: Misil list
     ColisionAlien: int
+    ColisionEnemigo: int
 }
 
 let estadoInicial = {
@@ -49,6 +50,7 @@ let estadoInicial = {
     EnemigoEstado = Alive
     MisilesEnemigos = []
     ColisionAlien = 0
+    ColisionEnemigo = 0
 }
 
 let dibujarAlien state =
@@ -60,7 +62,12 @@ let dibujarAlien state =
     mostrarMensaje state.AlienX state.AlienY ConsoleColor.Yellow sprite
 
 let dibujarEnemigo state =
-    mostrarMensaje state.EnemigoX state.EnemigoY ConsoleColor.Yellow "👾"
+    let sprite =
+        if state.EnemigoEstado = Alive then 
+            "👾"
+        else
+            "💥"
+    mostrarMensaje state.EnemigoX state.EnemigoY ConsoleColor.Yellow sprite
 
 let dibujarMisiles state =
     state.Misiles
@@ -113,23 +120,29 @@ let actualizarMisilesEnemigos state =
         state
 
 let actualizarDisparoEnemigo state =
-    if state.Tick % 10 = 0 then 
-        let nuevoMisil = {
-            X = state.EnemigoX-2
-            Y = state.EnemigoY
-        }
-        {state with MisilesEnemigos= nuevoMisil :: state.MisilesEnemigos; RedibujarPantalla=true}
+    if state.EnemigoEstado = Alive then 
+        if state.Tick % 10 = 0 then 
+            let nuevoMisil = {
+                X = state.EnemigoX-2
+                Y = state.EnemigoY
+            }
+            {state with MisilesEnemigos= nuevoMisil :: state.MisilesEnemigos; RedibujarPantalla=true}
+        else
+            state
     else
         state
 let actualizarEnemigo state =
-    if state.Tick % 4 = 0 then 
-        let nuevaY = state.EnemigoY+state.EnemigoDir
-        match nuevaY with 
-        | y when y > Console.BufferHeight-1 -> Console.BufferHeight-1,-1
-        | y when y < 0 -> 0,1
-        | y -> y, state.EnemigoDir
-        |> fun (y,dir) ->
-            {state with EnemigoY=y;EnemigoDir=dir;RedibujarPantalla=true}
+    if state.EnemigoEstado = Alive then 
+        if state.Tick % 4 = 0 then 
+            let nuevaY = state.EnemigoY+state.EnemigoDir
+            match nuevaY with 
+            | y when y > Console.BufferHeight-1 -> Console.BufferHeight-1,-1
+            | y when y < 0 -> 0,1
+            | y -> y, state.EnemigoDir
+            |> fun (y,dir) ->
+                {state with EnemigoY=y;EnemigoDir=dir;RedibujarPantalla=true}
+        else
+            state
     else
         state
 
@@ -147,12 +160,35 @@ let detectarColisionConAlien state =
             }
         else
             state
+let detectarColisionConEnemigo state =
+    state.Misiles
+    |> List.filter (fun misil -> not (misil.X = state.EnemigoX-1 && misil.Y = state.EnemigoY))
+    |> fun nuevosMisiles ->
+        if nuevosMisiles.Length <> state.Misiles.Length then 
+            {state with 
+                EnemigoEstado=Hit
+                Misiles=nuevosMisiles
+                RedibujarPantalla=true
+                ColisionEnemigo=state.Tick
+            }
+        else
+            state
 
 let resetAlien state =
     if state.AlienState = Hit then 
         let tiempo = state.Tick-state.ColisionAlien
         if tiempo >= 160 then 
             {state with AlienState=Alive;RedibujarPantalla=true}
+        else
+            state
+    else
+        state
+
+let resetEnemigo state =
+    if state.EnemigoEstado = Hit then 
+        let tiempo = state.Tick-state.ColisionEnemigo
+        if tiempo >= 160 then 
+            {state with EnemigoEstado=Alive;RedibujarPantalla=true}
         else
             state
     else
@@ -205,7 +241,9 @@ let rec mainLoop state =
     |> actualizarDisparoEnemigo
     |> actualizarMisilesEnemigos
     |> detectarColisionConAlien
+    |> detectarColisionConEnemigo
     |> resetAlien
+    |> resetEnemigo
     |> procesarTeclado
     |> redibujarPantalla
     |> fun nuevoEstado ->
