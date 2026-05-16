@@ -120,29 +120,23 @@ let actualizarMisilesEnemigos state =
         state
 
 let actualizarDisparoEnemigo state =
-    if state.EnemigoEstado = Alive then 
-        if state.Tick % 10 = 0 then 
-            let nuevoMisil = {
-                X = state.EnemigoX-2
-                Y = state.EnemigoY
-            }
-            {state with MisilesEnemigos= nuevoMisil :: state.MisilesEnemigos; RedibujarPantalla=true}
-        else
-            state
+    if state.EnemigoEstado = Alive && state.Tick % 10 = 0 then 
+        let nuevoMisil = {
+            X = state.EnemigoX-2
+            Y = state.EnemigoY
+        }
+        {state with MisilesEnemigos= nuevoMisil :: state.MisilesEnemigos; RedibujarPantalla=true}
     else
         state
 let actualizarEnemigo state =
-    if state.EnemigoEstado = Alive then 
-        if state.Tick % 4 = 0 then 
-            let nuevaY = state.EnemigoY+state.EnemigoDir
-            match nuevaY with 
-            | y when y > Console.BufferHeight-1 -> Console.BufferHeight-1,-1
-            | y when y < 0 -> 0,1
-            | y -> y, state.EnemigoDir
-            |> fun (y,dir) ->
-                {state with EnemigoY=y;EnemigoDir=dir;RedibujarPantalla=true}
-        else
-            state
+    if state.EnemigoEstado= Alive && state.Tick % 4 = 0 then 
+        let nuevaY = state.EnemigoY+state.EnemigoDir
+        match nuevaY with 
+        | y when y > Console.BufferHeight-1 -> Console.BufferHeight-1,-1
+        | y when y < 0 -> 0,1
+        | y -> y, state.EnemigoDir
+        |> fun (y,dir) ->
+            {state with EnemigoY=y;EnemigoDir=dir;RedibujarPantalla=true}
     else
         state
 
