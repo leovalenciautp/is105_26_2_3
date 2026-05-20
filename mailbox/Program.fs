@@ -31,7 +31,7 @@ let rec tempoDos t =
     async {
         do! Async.Sleep 500
         displayMessageRight 0 ConsoleColor.Red $"{t}"
-        return! tempoUno (t+1)
+        return! tempoDos (t+1)
     }
 
 Console.Clear()
