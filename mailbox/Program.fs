@@ -31,10 +31,19 @@ let displayMessageRight y color (msg:string) =
     displayMessage x y color msg
 
 
+let displayClock1 state =
+    displayMessage 0 0 ConsoleColor.Red $"{state.Clock1}"
+
+let displayClock2 state =
+    displayMessageRight 0 ConsoleColor.Red $"{state.Clock2}"
 let refreshScreen state =
     Console.Clear()
-    displayMessage 0 0 ConsoleColor.Red $"{state.Clock1}"
-    displayMessageRight 0 ConsoleColor.Red $"{state.Clock2}"
+    [|
+        displayClock1
+        displayClock2
+    |]
+    |> Array.iter (fun f -> state |> f)
+    
     state
     
 let initialState = {
