@@ -89,9 +89,25 @@ let rec redibujar() =
         return! redibujar()
     }
 
+let rec leerTeclado() =
+    async {
+        let salir = 
+            Console.KeyAvailable &&
+            let k = Console.ReadKey true
+            k.Key = ConsoleKey.Escape
+        if not salir then 
+            do! Async.Sleep 10
+            return! leerTeclado()
+    }
+
 Console.Clear()
 Console.CursorVisible <- false
 
 tempoUno() |> Async.StartImmediate
 tempoDos() |> Async.StartImmediate
-redibujar() |> Async.RunSynchronously
+redibujar() |> Async.StartImmediate
+
+leerTeclado() |> Async.RunSynchronously
+
+Console.CursorVisible <- true
+Console.Clear()
